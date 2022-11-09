@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <MyHeader 
-      :numCorrect="numCorrrect"
+      :numCorrect="numCorrect"
       :numTotal="numTotal"
     />
 
@@ -47,8 +47,11 @@
           if(isCorrect){
             this.numCorrect++
           }
-          this.total++
+          this.numTotal++
         }
+    },
+    created(){
+      
     },
     mounted(){
       fetch('https://opentdb.com/api.php?amount=10&category=27&type=multiple', {
@@ -58,7 +61,7 @@
       }).then((jsonData) => {
           this.questions = jsonData.results
       })
-    }
+    },
   }
 </script>
 

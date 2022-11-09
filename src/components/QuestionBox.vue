@@ -8,12 +8,17 @@
     <hr class="my-4">
 
 
-    <b-list-group v-for="(answer, index) in answers" :key="index">
-        <b-list-group-item @click="selectAnswer(index)" :class="[selectedIndex === index ? 'selected' : '']">{{answer}}</b-list-group-item>
+    <b-list-group v-for="(answer, index) in shuffledAnswers" :key="index">
+        <b-list-group-item 
+            @click.prevent="selectAnswer(index)" 
+            :class="answerClass(index)"
+        >
+        {{answer}}
+        </b-list-group-item>
     </b-list-group>
 
-    <b-button variant="primary" @click="submitAnswer">Submit</b-button>
-        <b-button @click="next" variant="success" >Next</b-button>
+    <b-button variant="primary" @click="submitAnswer" :disabled="selectedIndex === null || answered">Submit</b-button>
+        <b-button @click="next" variant="success" :disabled="selectedIndex === null">Next</b-button>
     </b-jumbotron>
     </div>
 </template> 
@@ -21,7 +26,7 @@
 <script>  
 import _ from 'lodash'
 
-export default {
+export default { 
     props: { 
         currentQuestion: Object,
         next: Function,
@@ -31,7 +36,8 @@ export default {
         return {
              selectedIndex: null,
              shuffledAnswers: [],
-             correctIndex: null
+             correctIndex: null,
+             answered: false,
         }
     },
     computed: {
@@ -42,29 +48,54 @@ export default {
         }
     },
     watch: {
-        currentQuestion(){ 
-            this.selectedIndex = null
-            this.shuffleAnswers()
-        },
+        //when the currentQuestion changes, we want to shuffle the answers and set the correctIndex
+        currentQuestion: {
+            immediate: true,
+            handler(){
+                this.selectedIndex = null
+                this.shuffleAnswers()
+                this.answered = false
+                console.log(this.correctIndex, this.currentQuestion.correct_answer) 
+            },
+        },  
     },
     methods: {
+        //
         selectAnswer(index){
             this.selectedIndex = index
         },
+        //shuffle answers array using lodash
         shuffleAnswers(){
             let answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
             this.shuffledAnswers = _.shuffle(answers)
+            this.correctIndex = this.shuffledAnswers.indexOf(this.currentQuestion.correct_answer)
         },
         submitAnswer(){
             let isCorrect = false
             if (this.selectedIndex == this.correctIndex){
                 isCorrect = true
             }
+            this.answered = true
             this.increment(isCorrect)
-        }
-    },
-    mounted(){
-        this.shuffleAnswers()
+        },
+        answerClass(index){
+            let answerClass = ''
+
+            if(!this.answered && this.selectedIndex === index){
+                answerClass = 'selected'
+            }
+            else if(this.answered && this.correctIndex === index){
+                answerClass = 'correct'
+            }
+            else if(this.answered && this.selectedIndex === index && this.correctIndex !== index){
+                answerClass = 'incorrect'
+            }
+            return answerClass
+        },
+        mounted(){
+            this.shuffleAnswers()
+            
+        },
     }
 }
 </script>
@@ -88,6 +119,6 @@ export default {
         background-color: rgb(22, 169, 25);
     }
     .incorrect{
-        background-color: red;
+        background-color: rgb(212, 73, 73);
     }
 </style>
